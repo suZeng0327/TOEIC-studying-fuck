@@ -4,6 +4,7 @@ let gameQueue = [];
 let currentWord = null;
 let timer = null;
 let timeLeft = 10;
+let inkoObj = null; // 한영 자동 변환 라이브러리 인스턴스
 
 // DOM 요소 캐싱
 const elements = {
@@ -40,6 +41,7 @@ const elements = {
 
 // --- 초기화 및 로컬스토리지 ---
 function init() {
+    loadInkoLibrary(); // HTML 수정 없이 JS 내부에서 한영 변환 라이브러리 로드
     const savedWords = localStorage.getItem('toeicWords');
     if (savedWords) {
         words = JSON.parse(savedWords);
@@ -53,6 +55,34 @@ function saveWords() {
     renderWordList();
 }
 
+// --- 한영 변환 라이브러리 로드 및 핸들러 ---
+function loadInkoLibrary() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/inko@1.1.1/inko.min.js';
+    script.onload = () => {
+        inkoObj = new Inko();
+    };
+    document.head.appendChild(script);
+}
+
+function forceKoreanInput(e) {
+    // 라이브러리가 아직 로드되지 않았으면 무시
+    if (!inkoObj) return;
+
+    const target = e.target;
+    const originalValue = target.value;
+
+    // 1. 입력된 텍스트를 모두 영타로 취급하여 풀기 (영타+한글 꼬임 방지)
+    const asEnglish = inkoObj.ko2en(originalValue);
+    // 2. 완벽한 영타 문자열을 다시 한글로 조합
+    const convertedValue = inkoObj.en2ko(asEnglish);
+
+    // 변환된 결과가 기존과 다를 때만 덮어쓰기 (실제 한글 키보드 입력 시 끊김 방지)
+    if (originalValue !== convertedValue) {
+        target.value = convertedValue;
+    }
+}
+
 // --- 이벤트 바인딩 ---
 function bindEvents() {
     // 탭 전환
@@ -64,11 +94,17 @@ function bindEvents() {
     elements.btnExport.addEventListener('click', exportJSON);
     elements.inputImport.addEventListener('change', importJSON);
 
+    // ★ 한글 뜻 입력창: 영타 -> 한글 자동 변환 이벤트
+    elements.inputKor.addEventListener('input', forceKoreanInput);
+
     // 게임 컨트롤
     elements.btnStart.addEventListener('click', startGame);
     elements.gameForm.addEventListener('submit', checkAnswer);
     elements.btnNextWord.addEventListener('click', nextGameWord);
     elements.btnListen.addEventListener('click', () => speakWord(currentWord.eng));
+
+    // ★ 게임 정답 입력창: 영타 -> 한글 자동 변환 이벤트
+    elements.inputAnswer.addEventListener('input', forceKoreanInput);
 }
 
 // --- 탭 컨트롤 ---
