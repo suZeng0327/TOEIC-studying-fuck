@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>토익 영단어 마스터</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>토익 영단어 마스터</h1>
+            <nav class="tabs">
+                <button id="tab-manager" class="tab-btn active">단어장 관리</button>
+                <button id="tab-game" class="tab-btn">학습 게임</button>
+            </nav>
+        </header>
+
+        <!-- 단어장 관리 탭 -->
+        <main id="view-manager" class="view active">
+            <div class="card">
+                <h2>새 단어 추가</h2>
+                <form id="add-word-form" class="input-group">
+                    <input type="text" id="input-eng" placeholder="영단어" required autocomplete="off">
+                    <input type="text" id="input-kor" placeholder="한글 뜻" required autocomplete="off">
+                    <button type="submit" class="btn-primary">추가</button>
+                </form>
+            </div>
+
+            <div class="data-actions">
+                <button id="btn-export" class="btn-secondary">내보내기</button>
+                <label for="input-import" class="btn-secondary cursor-pointer">가져오기</label>
+                <input type="file" id="input-import" accept=".json" class="hidden">
+            </div>
+
+            <div class="card list-card">
+                <h2>단어 목록 (<span id="word-count">0</span>)</h2>
+                <ul id="word-list">
+                    <!-- 단어 목록이 JS를 통해 여기에 렌더링됩니다 -->
+                </ul>
+            </div>
+        </main>
+
+        <!-- 학습 게임 탭 -->
+        <main id="view-game" class="view hidden">
+            <div class="card game-card">
+                <div id="game-start-screen">
+                    <h2>단어 학습을 시작합니다</h2>
+                    <p>저장된 단어가 무작위로 출제됩니다.<br>10초 안에 뜻을 맞춰보세요!</p>
+                    <button id="btn-start-game" class="btn-primary large">게임 시작</button>
+                </div>
+
+                <div id="game-play-screen" class="hidden">
+                    <div class="timer-container">
+                        <span id="timer-text">10</span>초
+                    </div>
+                    <div class="word-display">
+                        <h2 id="current-word">Word</h2>
+                        <button id="btn-listen" class="btn-icon" title="다시 듣기">🔊</button>
+                    </div>
+
+                    <form id="game-form" class="input-group">
+                        <input type="text" id="input-answer" placeholder="한글 뜻을 입력하세요" autocomplete="off">
+                        <button type="submit" class="btn-primary" id="btn-submit-answer">확인</button>
+                    </form>
+
+                    <div id="game-feedback" class="feedback-box hidden">
+                        <p id="feedback-message">오답입니다!</p>
+                        <p class="correct-answer">정답: <span id="correct-meaning"></span></p>
+                        <button id="btn-next-word" class="btn-primary">다음 단어</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
