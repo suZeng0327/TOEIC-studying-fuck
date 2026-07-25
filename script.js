@@ -22,6 +22,7 @@ const elements = {
     wordCount: document.getElementById('word-count'),
     btnExport: document.getElementById('btn-export'),
     inputImport: document.getElementById('input-import'),
+    btnDeleteAll: document.getElementById('btn-delete-all'), // 전체 삭제 버튼 추가
 
     // 게임
     startScreen: document.getElementById('game-start-screen'),
@@ -93,6 +94,7 @@ function bindEvents() {
     elements.addForm.addEventListener('submit', addWord);
     elements.btnExport.addEventListener('click', exportJSON);
     elements.inputImport.addEventListener('change', importJSON);
+    elements.btnDeleteAll.addEventListener('click', deleteAllWords); // 전체 삭제 이벤트
 
     // ★ 한글 뜻 입력창: 영타 -> 한글 자동 변환 이벤트
     elements.inputKor.addEventListener('input', forceKoreanInput);
@@ -150,6 +152,19 @@ function deleteWord(index) {
     // 알람 경고창 없이 바로 삭제 처리
     words.splice(index, 1);
     saveWords();
+}
+
+function deleteAllWords() {
+    if (words.length === 0) {
+        alert('삭제할 단어가 없습니다.');
+        return;
+    }
+    
+    // 실수로 지우는 것을 방지하기 위한 확인창
+    if (confirm('저장된 모든 단어를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+        words = [];
+        saveWords();
+    }
 }
 
 function renderWordList() {
@@ -295,9 +310,22 @@ function checkAnswer(e) {
     const userAnswer = elements.inputAnswer.value.trim();
     clearInterval(timer);
 
-    const correctAnswers = currentWord.kor.split(',').map(answer => answer.trim());
+    // ★ 사용자 입력에서 모든 띄어쓰기 제거
+    const userAnswerNoSpace = userAnswer.replace(/\s+/g, '');
 
-    if (correctAnswers.includes(userAnswer)) {
+    // 정답 판별 로직 수정 (띄어쓰기 및 괄호 무시)
+    const isCorrect = currentWord.kor.split(',').some(answer => {
+        // 1. 원본 정답에서 띄어쓰기만 제거하여 비교 (괄호까지 다 입력한 경우 정답 처리)
+        const originalNoSpace = answer.replace(/\s+/g, '');
+        
+        // 2. 소( ), 중{ }, 대[ ] 괄호와 그 안의 내용을 완전히 제거한 후 띄어쓰기 제거하여 비교
+        const cleanedNoSpace = answer.replace(/\([^)]*\)|\[[^\]]*\]|\{[^}]*\}/g, '').replace(/\s+/g, '');
+
+        // 사용자가 괄호까지 썼든 안 썼든, 정답과 일치하면 통과
+        return userAnswerNoSpace === originalNoSpace || userAnswerNoSpace === cleanedNoSpace;
+    });
+
+    if (isCorrect) {
         nextGameWord();
     } else {
         handleWrongAnswer("오답입니다!");
