@@ -107,6 +107,31 @@ function bindEvents() {
 
     // ★ 게임 정답 입력창: 영타 -> 한글 자동 변환 이벤트
     elements.inputAnswer.addEventListener('input', forceKoreanInput);
+
+    // ★ 전역 키보드 단축키 이벤트 추가 (m: 음성 재생, Enter: 다음 단어 진행)
+    document.addEventListener('keydown', handleGlobalKeydown);
+}
+
+// ★ 전역 단축키 핸들러 함수
+function handleGlobalKeydown(e) {
+    // 게임 탭이 켜져있고 진행 중인 단어가 있을 때만 작동
+    if (elements.viewGame.classList.contains('active') && currentWord) {
+
+        // 1. 'm' 키를 누르면 음성 재생
+        if (e.code === 'KeyM') {
+            // 게임 중 한글 뜻을 입력할 때 'm'(한글 'ㅡ')을 누르면 불필요하게 소리가 나는 것을 방지
+            if (document.activeElement === elements.inputAnswer && !elements.inputAnswer.disabled) {
+                return;
+            }
+            speakWord(currentWord.eng);
+        }
+
+        // 2. 오답 화면(피드백 박스)이 떠 있는 상태에서 Enter를 누르면 바로 다음 단어로 이동
+        if (e.key === 'Enter' && !elements.feedbackBox.classList.contains('hidden')) {
+            e.preventDefault(); // Enter 중복 실행 방지
+            nextGameWord();
+        }
+    }
 }
 
 // --- 탭 컨트롤 ---
@@ -159,7 +184,7 @@ function deleteAllWords() {
         alert('삭제할 단어가 없습니다.');
         return;
     }
-    
+
     // 실수로 지우는 것을 방지하기 위한 확인창
     if (confirm('저장된 모든 단어를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
         words = [];
@@ -317,7 +342,7 @@ function checkAnswer(e) {
     const isCorrect = currentWord.kor.split(',').some(answer => {
         // 1. 원본 정답에서 띄어쓰기만 제거하여 비교 (괄호까지 다 입력한 경우 정답 처리)
         const originalNoSpace = answer.replace(/\s+/g, '');
-        
+
         // 2. 소( ), 중{ }, 대[ ] 괄호와 그 안의 내용을 완전히 제거한 후 띄어쓰기 제거하여 비교
         const cleanedNoSpace = answer.replace(/\([^)]*\)|\[[^\]]*\]|\{[^}]*\}/g, '').replace(/\s+/g, '');
 
@@ -340,7 +365,7 @@ function handleWrongAnswer(message) {
     elements.correctMeaning.textContent = currentWord.kor;
     elements.feedbackBox.classList.remove('hidden');
 
-    elements.btnNextWord.focus();
+    // 포커스가 버튼에 묶이지 않도록 기존 btnNextWord 포커스 코드를 제거 (전역 Enter 단축키가 알아서 처리함)
 }
 
 init();
